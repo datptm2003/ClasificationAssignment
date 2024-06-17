@@ -41,11 +41,14 @@ class TwoClassesOneOneClassifier(BaseClassifier):
             idx = np.where((train_target == first) | (train_target == second))
             # print("Original:",train_target)
             tempX = train_data[idx]
-            tempT = train_target[idx]
+            # tempT = train_target[idx]
+            tempT = np.zeros((len(train_target[idx]), 2))
+            tempT[np.arange(len(train_target[idx])), [1 if t == second else 0 for t in train_target[idx]]] = 1
+            # print(tempT)
             ones_column = np.ones((tempX.shape[0], 1))
             tempX = np.hstack((tempX, ones_column))
-            tempT[tempT == first] = -1
-            tempT[tempT == second] = 1
+            # tempT[tempT == first] = -1
+            # tempT[tempT == second] = 1
             # for i in range(len(tempX)):
             #     tempX[i] = np.append(tempX[i],1)
 
@@ -55,7 +58,9 @@ class TwoClassesOneOneClassifier(BaseClassifier):
     def predict(self, test, pair_id):
         # print(pair_id)
         # print(np.dot(np.transpose(self._w[pair_id]),np.array(test)))
-        return int(np.dot(np.transpose(self._w[pair_id]),np.array(test)) > 0)
+        res = np.dot(np.transpose(self._w[pair_id]),np.array(test)).tolist()
+        # print(res)
+        return res.index(max(res))
     
     def test(self, k):
         kf = KFold(n_splits=k, shuffle=True, random_state=50)
@@ -83,6 +88,7 @@ class TwoClassesOneOneClassifier(BaseClassifier):
                         class_rank[first] += 1
                     else:
                         class_rank[second] += 1
+                    
                 pred = class_rank.index(max(class_rank))
                 # print("Test:",pred,test_target[i])
                 
@@ -105,18 +111,23 @@ class TwoClassesOneRestClassifier(BaseClassifier):
             idx = np.where((train_target == first) | (train_target != first))
             # print(idx)
             tempX = train_data[idx]
-            tempT = train_target[idx]
+            # tempT = train_target[idx]
+            tempT = np.zeros((len(train_target[idx]), 2))
+            tempT[np.arange(len(train_target[idx])), [1 if t != first else 0 for t in train_target[idx]]] = 1
+            
             ones_column = np.ones((tempX.shape[0], 1))
             tempX = np.hstack((tempX, ones_column))
-            tempT[tempT == first] = -1
-            tempT[tempT != -1] = 1
+            # tempT[tempT == first] = -1
+            # tempT[tempT != -1] = 1
             # print("Train target:",train_target)
             # print("TempT",tempT)
             self._w[first] = np.dot(np.linalg.pinv(tempX),tempT)
         return self._w
 
     def predict(self, test, pair_id):
-        return int(np.dot(np.transpose(self._w[pair_id]),np.array(test)) > 0)
+        res = np.dot(np.transpose(self._w[pair_id]),np.array(test)).tolist()
+        # print(res)
+        return res.index(max(res))
     
     def test(self, k):
         kf = KFold(n_splits=k, shuffle=True, random_state=50)
