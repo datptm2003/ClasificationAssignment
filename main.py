@@ -7,6 +7,6 @@ iris = datasets.load_iris()
 data = iris.data
 target = iris.target
 
-base = clf.ThreeClassesClassifier(data,target)
+base = clf.FisherThreeClassesClassifier(data,target)
 
 print(base.test(5))
